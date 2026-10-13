@@ -2,91 +2,136 @@
 
 ## 1. Project Overview
 
-This is a learning project that demonstrates a simple ATM
+Mini ATM is a learning project that demonstrates a simple ATM
 application using a browser frontend and a Java backend.
 
-The project is deployed on an Azure Virtual Machine.
+The application is hosted on an Azure Virtual Machine.
 
-This is a demo application, not a real banking system.
+This project is for learning and testing only. It is not a real
+banking application.
 
-## 2. Technologies Used
+## 2. Project Architecture
 
-- HTML - webpage structure
-- CSS - webpage design
-- JavaScript - browser interactions
-- Java - backend HTTP server and login API
-- Azure Virtual Machine - application hosting
-- Azure Network Security Group (NSG) - network access rules
-- Git and GitHub - source code management
+```text
+User's Browser
+      |
+      v
+HTML, CSS and JavaScript
+      |
+      v
+Java HTTP Server
+      |
+      +---- GET  /api/health
+      |
+      +---- POST /api/login
+      |
+      +---- GET  /
+      |
+      v
+Azure Virtual Machine
+```
 
-## 3. Project Structure
+The browser displays the ATM interface. The Java server provides
+the login API and serves the frontend webpage.
+
+## 3. Technologies Used
+
+| Technology | Purpose |
+|---|---|
+| HTML | Creates the webpage structure |
+| CSS | Styles the webpage |
+| JavaScript | Handles browser interactions |
+| Java | Runs the backend HTTP server |
+| Azure Virtual Machine | Hosts the application |
+| Azure NSG | Controls network access |
+| Git | Tracks source-code changes |
+| GitHub | Stores and shares the source code |
+| Docker | Container configuration is provided |
+| Azure Pipelines | Pipeline configuration is provided |
+
+Note: Docker and Azure Pipelines files are included in the project.
+Their complete execution is not confirmed by this documentation.
+
+## 4. Project Structure
 
 ```text
 Mini-ATM-DevOps-POC/
 ├── browser-frontend/
 │   └── index.html
 ├── java-backend/
-│   ├── MiniATMServer.java
-│   └── MiniATMServer.java.backup
+│   └── MiniATMServer.java
+├── MiniATM.java
+├── Dockerfile
+├── azure-pipelines.yml
 └── README.md
 ```
 
-Additional files may exist in the project directory.
+## 5. What Each File Does
 
-## 4. Frontend Features
+### browser-frontend/index.html
 
-- ATM login page
+Contains the ATM webpage, styling and browser-side JavaScript.
+
+Features include:
+- Login page
 - ATM dashboard
 - Check balance
-- Deposit demo amount
-- Withdraw demo amount
+- Deposit and withdraw demo amounts
 - Mini statement
 - Transfer money demo
 - Change PIN demo
 - Logout
 
-Note: Balance and transaction history are currently stored
-in browser memory. They are not saved permanently by the backend.
+### java-backend/MiniATMServer.java
 
-## 5. Backend Features
+Runs the Java HTTP server.
 
-- GET /api/health
-  Checks whether the Java server is running.
+It provides:
+- GET /api/health - checks server status
+- POST /api/login - validates the demo account and PIN
+- GET / - serves the ATM webpage
 
-- POST /api/login
-  Checks the demo account number and PIN.
+### MiniATM.java
 
-- GET /
-  Serves the Mini ATM webpage.
+Contains the original Java console-based ATM application.
 
-The current demo credentials are hard-coded in Java.
-Do not use real banking credentials.
+### Dockerfile
+
+Contains instructions for building a Docker image.
+The container build should be tested separately.
+
+### azure-pipelines.yml
+
+Contains Azure Pipeline configuration.
+The pipeline should be reviewed and tested before use.
 
 ## 6. Demo Login
 
-Account Number: 1234567890
-PIN: 1234
+Account Number: `1234567890`
 
-These are demo credentials only.
+PIN: `1234`
+
+These credentials are hard-coded for demonstration only.
+Never use real banking credentials in this application.
 
 ## 7. Requirements
 
 - Java JDK
 - Azure VM with SSH access
 - Git
-- Web browser
+- A web browser
 
 Maven is not required.
 
 ## 8. Run the Application
 
-Go to the Java backend directory:
+Go to the project directory:
 
 ```bash
-cd java-backend
+cd /home/sachin/Mini-ATM-DevOps-POC/java-backend
 ```
 
-Compile the Java file:
+Compile the Java server:
 
 ```bash
 javac MiniATMServer.java
@@ -98,16 +143,23 @@ Start the server:
 java MiniATMServer
 ```
 
-The server listens on 127.0.0.1:8080.
+The server listens on `127.0.0.1:8080`.
 
-Open the application through an appropriate local connection
-or SSH tunnel:
+For secure testing, use an SSH tunnel from your computer:
 
-http://127.0.0.1:8080/
+```powershell
+ssh -N -L 8080:127.0.0.1:8080 sachin@YOUR_VM_PUBLIC_IP
+```
 
-## 9. Health Check
+Keep the SSH session running and open this URL in your browser:
 
-Run this command on the VM:
+`http://127.0.0.1:8080/`
+
+Replace `YOUR_VM_PUBLIC_IP` with the VM's current public IP address.
+
+## 9. Test the Backend
+
+Check server health:
 
 ```bash
 curl http://127.0.0.1:8080/api/health
@@ -119,26 +171,40 @@ Expected response:
 {"status":"running","application":"Mini ATM"}
 ```
 
+Test login:
+
+```bash
+curl -i -X POST http://127.0.0.1:8080/api/login \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "account=1234567890&pin=1234"
+```
+
 ## 10. Current Limitations
 
-- This is a learning demo only.
-- Login credentials are hard-coded.
-- Balance and transactions are not persisted by the backend.
-- Transfer Money does not perform a real transfer.
+- This is a learning demo, not a real banking system.
+- Account number and PIN are hard-coded.
+- Balance and transaction history are stored in browser memory.
+- Balance and transactions are not saved permanently by the backend.
+- Transfer Money is a visual demo only.
 - Change PIN is not implemented in the backend.
 - No database is connected.
-- The application is not suitable for real banking use.
+- Authentication needs stronger security before any real-world use.
 
 ## 11. Future Improvements
 
-- Move balance and transactions to the Java backend.
-- Add database storage.
+- Manage balance and transactions through backend APIs.
+- Add persistent storage or a database.
 - Improve authentication and PIN security.
 - Add automated tests.
-- Create a Docker image.
-- Add a CI/CD pipeline using GitHub Actions.
-- Deploy through Azure services.
+- Test and improve the Docker setup.
+- Test and improve the Azure Pipeline.
+- Add a CI/CD workflow for deployment.
 
-## 12. Author
+## 12. Project Repository
+
+GitHub:
+https://github.com/yadavsachin98563/Mini-ATM-DevOps-POC
+
+## 13. Author
 
 Mini ATM DevOps POC - Learning Project
