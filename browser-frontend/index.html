@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mini ATM</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0; font-family: Arial, sans-serif;
+  background: #f1f5f9; color: #172554;
+}
+header {
+  background: #123b70; color: white;
+  padding: 20px; text-align: center;
+}
+main {
+  max-width: 650px; margin: 35px auto; padding: 20px;
+}
+.card {
+  background: white; padding: 25px;
+  border-radius: 14px; box-shadow: 0 4px 16px #0001;
+}
+h2 { margin-top: 0; }
+label { display: block; margin-top: 16px; }
+input {
+  width: 100%; padding: 12px; margin-top: 7px;
+  border: 1px solid #cbd5e1; border-radius: 7px;
+}
+button {
+  border: 0; border-radius: 7px; padding: 12px;
+  background: #1763ad; color: white;
+  cursor: pointer; font-size: 15px;
+}
+button:hover { background: #104b85; }
+.primary { width: 100%; margin-top: 20px; }
+.buttons {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px; margin-top: 20px;
+}
+.balance {
+  background: #e0efff; padding: 20px;
+  border-radius: 10px; margin: 20px 0;
+}
+.amount { font-size: 30px; font-weight: bold; }
+#dashboard { display: none; }
+#message { margin-top: 15px; color: #b42318; }
+.note { color: #64748b; font-size: 13px; line-height: 1.5; }
+footer { text-align: center; color: #64748b; padding: 20px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Mini ATM</h1>
+  <p>Your simple banking demo</p>
+</header>
+
+<main>
+  <section id="login" class="card">
+    <h2>Welcome</h2>
+    <p>Enter your demo account details to continue.</p>
+
+    <label for="account">Account Number</label>
+    <input id="account" inputmode="numeric"
+           placeholder="Enter account number">
+
+    <label for="pin">PIN</label>
+    <input id="pin" type="password" inputmode="numeric"
+           placeholder="Enter demo PIN">
+
+    <button class="primary" onclick="login()">Login</button>
+    <p id="message" role="status"></p>
+    <p class="note">
+      Learning demo only. The temporary login check runs in
+      this browser and is not secure for real banking.
+    </p>
+  </section>
+
+  <section id="dashboard" class="card">
+    <h2>ATM Dashboard</h2>
+    <p>Welcome, John Doe!</p>
+
+    <div class="balance">
+      <p>Available Balance (demo)</p>
+      <div class="amount" id="balance">₹10,000.00</div>
+    </div>
+
+    <div class="buttons">
+      <button onclick="showBalance()">Check Balance</button>
+      <button onclick="deposit()">Deposit</button>
+      <button onclick="withdraw()">Withdraw</button>
+      <button onclick="statement()">Mini Statement</button>
+      <button onclick="transfer()">Transfer Money</button>
+      <button onclick="changePin()">Change PIN</button>
+    </div>
+
+    <p id="result" role="status"></p>
+    <button class="primary" onclick="logout()">Logout</button>
+    <p class="note">
+      Demo only: balance and transactions are temporary.
+      Refreshing the page resets them. No real money is moved.
+    </p>
+  </section>
+</main>
+
+<footer>Mini ATM · Learning Project</footer>
+
+<script>
+let balance = 10000;
+let transactions = [];
+
+async function login() {
+  const account = document.getElementById("account").value.trim();
+  const pin = document.getElementById("pin").value.trim();
+  const message = document.getElementById("message");
+  message.textContent = "Checking login...";
+  try {
+    const response = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ account, pin })
+    });
+    const result = await response.json();
+    if (response.ok && result.success) {
+      document.getElementById("login").style.display = "none";
+      document.getElementById("dashboard").style.display = "block";
+      message.textContent = "";
+      showBalance();
+    } else {
+      message.textContent = "Login failed. Check account number and PIN.";
+    }
+  } catch (error) {
+    message.textContent = "Cannot contact Java backend. Check server.";
+  }
+}
+function updateBalance() {
+  document.getElementById("balance").textContent =
+    balance.toLocaleString("en-IN", {
+      style: "currency", currency: "INR"
+    });
+}
+
+function showBalance() {
+  updateBalance();
+  document.getElementById("result").textContent =
+    "Your demo balance is " +
+    balance.toLocaleString("en-IN", {
+      style: "currency", currency: "INR"
+    });
+}
+
+function deposit() {
+  const amount = Number(prompt("Enter deposit amount in rupees:"));
+  if (!Number.isFinite(amount) || amount <= 0) {
+    alert("Enter a valid positive amount.");
+    return;
+  }
+  balance += amount;
+  transactions.push("Deposit: +₹" + amount.toFixed(2));
+  updateBalance();
+  document.getElementById("result").textContent =
+    "Demo deposit successful.";
+}
+
+function withdraw() {
+  const amount = Number(prompt("Enter withdrawal amount in rupees:"));
+  if (!Number.isFinite(amount) || amount <= 0) {
+    alert("Enter a valid positive amount.");
+    return;
+  }
+  if (amount > balance) {
+    alert("Insufficient demo balance.");
+    return;
+  }
+  balance -= amount;
+  transactions.push("Withdraw: -₹" + amount.toFixed(2));
+  updateBalance();
+  document.getElementById("result").textContent =
+    "Demo withdrawal successful.";
+}
+
+function statement() {
+  document.getElementById("result").textContent =
+    transactions.length
+      ? transactions.join(" | ")
+      : "No demo transactions yet.";
+}
+
+function transfer() {
+  alert("Transfer is a visual demo only; no transfer is performed.");
+}
+
+function changePin() {
+  alert("PIN change will be implemented in a later backend step.");
+}
+
+function logout() {
+  document.getElementById("dashboard").style.display = "none";
+  document.getElementById("login").style.display = "block";
+  document.getElementById("pin").value = "";
+  document.getElementById("result").textContent = "";
+}
+</script>
+</body>
+</html>
