@@ -1,0 +1,23 @@
+name: Self-Hosted Runner Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  verify-runner:
+    runs-on: [self-hosted, Linux, X64]
+
+    steps:
+      - name: Show EC2 hostname
+        run: hostname
+
+      - name: Show Linux user
+        run: whoami
+
+      - name: Verify Java
+        run: java -version
+
+      - name: Verify Docker
+        run: docker --version
