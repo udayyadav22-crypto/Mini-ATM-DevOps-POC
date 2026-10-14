@@ -106,8 +106,17 @@ footer { text-align: center; color: #64748b; padding: 20px; }
 <footer>Mini ATM · Learning Project</footer>
 
 <script>
-let balance = 10000;
-let transactions = [];
+let accountNumber = "";
+
+async function api(path, data = null) {
+  const options = data
+    ? { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(data) }
+    : {};
+  const response = await fetch(path, options);
+  const result = await response.json();
+  if (!response.ok || result.success === false) throw new Error(result.message || "Request failed");
+  return result;
+}
 
 async function login() {
   const account = document.getElementById("account").value.trim();
@@ -115,90 +124,74 @@ async function login() {
   const message = document.getElementById("message");
   message.textContent = "Checking login...";
   try {
-    const response = await fetch("/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ account, pin })
-    });
-    const result = await response.json();
-    if (response.ok && result.success) {
-      document.getElementById("login").style.display = "none";
-      document.getElementById("dashboard").style.display = "block";
-      message.textContent = "";
-      showBalance();
-    } else {
-      message.textContent = "Login failed. Check account number and PIN.";
-    }
-  } catch (error) {
-    message.textContent = "Cannot contact Java backend. Check server.";
+    const result = await api("/api/login", { account, pin });
+    if (!result.success) throw new Error("Login failed");
+    accountNumber = account;
+    document.getElementById("login").style.display = "none";
+    document.getElementById("dashboard").style.display = "block";
+    message.textContent = "";
+    await showBalance();
+  } catch (e) {
+    message.textContent = e.message || "Cannot contact Java backend.";
   }
 }
-function updateBalance() {
-  document.getElementById("balance").textContent =
-    balance.toLocaleString("en-IN", {
-      style: "currency", currency: "INR"
-    });
+
+async function showBalance() {
+  try {
+    const data = await api("/api/balance?account=" + encodeURIComponent(accountNumber));
+    const balance = Number(data.balance);
+    document.getElementById("balance").textContent = balance.toLocaleString("en-IN", { style: "currency", currency: "INR" });
+    document.getElementById("result").textContent = "Available balance: " + balance.toLocaleString("en-IN", { style: "currency", currency: "INR" });
+  } catch (e) {
+    document.getElementById("result").textContent = e.message;
+  }
 }
 
-function showBalance() {
-  updateBalance();
-  document.getElementById("result").textContent =
-    "Your demo balance is " +
-    balance.toLocaleString("en-IN", {
-      style: "currency", currency: "INR"
-    });
-}
-
-function deposit() {
+async function deposit() {
   const amount = Number(prompt("Enter deposit amount in rupees:"));
-  if (!Number.isFinite(amount) || amount <= 0) {
-    alert("Enter a valid positive amount.");
-    return;
-  }
-  balance += amount;
-  transactions.push("Deposit: +₹" + amount.toFixed(2));
-  updateBalance();
-  document.getElementById("result").textContent =
-    "Demo deposit successful.";
+  if (!Number.isFinite(amount) || amount <= 0) return alert("Enter a valid positive amount.");
+  try {
+    await api("/api/deposit", { account: accountNumber, amount: String(amount) });
+    document.getElementById("result").textContent = "Deposit successful.";
+    await showBalance();
+  } catch (e) { alert(e.message); }
 }
 
-function withdraw() {
+async function withdraw() {
   const amount = Number(prompt("Enter withdrawal amount in rupees:"));
-  if (!Number.isFinite(amount) || amount <= 0) {
-    alert("Enter a valid positive amount.");
-    return;
-  }
-  if (amount > balance) {
-    alert("Insufficient demo balance.");
-    return;
-  }
-  balance -= amount;
-  transactions.push("Withdraw: -₹" + amount.toFixed(2));
-  updateBalance();
-  document.getElementById("result").textContent =
-    "Demo withdrawal successful.";
+  if (!Number.isFinite(amount) || amount <= 0) return alert("Enter a valid positive amount.");
+  try {
+    await api("/api/withdraw", { account: accountNumber, amount: String(amount) });
+    document.getElementById("result").textContent = "Withdrawal successful.";
+    await showBalance();
+  } catch (e) { alert(e.message); }
 }
 
-function statement() {
-  document.getElementById("result").textContent =
-    transactions.length
-      ? transactions.join(" | ")
-      : "No demo transactions yet.";
+async function statement() {
+  try {
+    const data = await api("/api/statement?account=" + encodeURIComponent(accountNumber));
+    const rows = data.transactions || [];
+    document.getElementById("result").textContent = rows.length
+      ? rows.map(t => `${t.time || ""} ${t.type || ""}: ₹${t.amount}`).join(" | ")
+      : "No transactions yet.";
+  } catch (e) { document.getElementById("result").textContent = e.message; }
 }
 
 function transfer() {
-  alert("Transfer is a visual demo only; no transfer is performed.");
+  alert("Transfer is not implemented yet.");
 }
 
 function changePin() {
-  alert("PIN change will be implemented in a later backend step.");
+  alert("PIN change is not implemented yet.");
 }
 
 function logout() {
+  accountNumber = "";
   document.getElementById("dashboard").style.display = "none";
   document.getElementById("login").style.display = "block";
   document.getElementById("pin").value = "";
   document.getElementById("result").textContent = "";
+  document.getElementById("message").textContent = "";
 }
 </script>
 </body>

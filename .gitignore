@@ -1,3 +1,19 @@
 *.class
 *.backup
 *.step1-backup
+
+# Local database and backups - never push
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.backup*
+*.pre-database-backup
+
+# Java generated files
+*.class
+
+# Local secrets and environment files
+.env
+.env.*
+!.env.example
