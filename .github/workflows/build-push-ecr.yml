@@ -1,0 +1,60 @@
+name: Mini-ATM Build and Push to ECR
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: [self-hosted, Linux, X64]
+
+    permissions:
+      contents: read
+
+    env:
+      AWS_REGION: ap-south-1
+      ECR_REPOSITORY: mini-atm
+      AWS_ACCOUNT_ID: "187949932422"
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Verify tools and AWS identity
+        run: |
+          echo "Runner hostname:"
+          hostname
+          echo "Linux user:"
+          whoami
+          docker --version
+          aws --version
+          aws sts get-caller-identity
+
+      - name: Login to Amazon ECR
+        run: |
+          aws ecr get-login-password --region "$AWS_REGION" \
+            | docker login \
+              --username AWS \
+              --password-stdin \
+              "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+
+      - name: Build Docker image
+        run: |
+          docker build -t "$ECR_REPOSITORY:${GITHUB_SHA}" .
+
+      - name: Tag Docker image
+        run: |
+          docker tag "$ECR_REPOSITORY:${GITHUB_SHA}" \
+            "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${GITHUB_SHA}"
+
+      - name: Push image to ECR
+        run: |
+          docker push \
+            "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${GITHUB_SHA}"
+
+      - name: Show pushed image
+        run: |
+          echo "Image pushed successfully:"
+          echo "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:${GITHUB_SHA}"
