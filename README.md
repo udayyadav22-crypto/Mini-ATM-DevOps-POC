@@ -208,3 +208,6 @@ https://github.com/yadavsachin98563/Mini-ATM-DevOps-POC
 ## 13. Author
 
 Mini ATM DevOps POC - Learning Project
+
+## Jira Integration
+Tracking Jira issue: MADPJ-1
