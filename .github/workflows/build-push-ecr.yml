@@ -1,5 +1,6 @@
 name: Mini-ATM Build and Push to ECR
 
+
 on:
   workflow_dispatch:
   push:
